@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from data_provider.data_factory import data_provider
 from exp.exp_basic import Exp_Basic
-from models import Informer, Autoformer, DLinear, MSGNet   
+from models import Informer, Autoformer, DLinear, MSGNet, FCMSGNN
 from utils.tools import EarlyStopping, adjust_learning_rate, visual, test_params_flop
 from utils.metrics import metric
 
@@ -23,7 +23,8 @@ class Exp_Main(Exp_Basic):
             'Informer': Informer,
             'Autoformer': Autoformer,
             'DLinear': DLinear,
-            'MSGNet': MSGNet
+            'MSGNet': MSGNet,
+            'FCMSGNN': FCMSGNN
         }
         model = model_dict[self.args.model].Model(self.args).float()
 
@@ -117,15 +118,15 @@ class Exp_Main(Exp_Basic):
                 iter_count += 1
                 model_optim.zero_grad()
                 # encoder inputs
-                batch_x = batch_x.float().to(self.device)           # [32, 96, 7]
-                batch_y = batch_y.float().to(self.device)           # [32, 144, 7]
-                batch_x_mark = batch_x_mark.float().to(self.device) # [32, 96, 4]
-                batch_y_mark = batch_y_mark.float().to(self.device) # [32, 144, 4]
+                batch_x = batch_x.float().to(self.device)               # [32, 96, 7]
+                batch_y = batch_y.float().to(self.device)               # [32, 144, 7]
+                batch_x_mark = batch_x_mark.float().to(self.device)     # [32, 96, 4]
+                batch_y_mark = batch_y_mark.float().to(self.device)     # [32, 144, 4]
                 
                 # decoder inputs
                 dec_inp = torch.zeros_like(batch_y[:, -self.args.pred_len:, :]).float()
                 # 前48已知的+后96待预测的
-                dec_inp = torch.cat([batch_y[:, :self.args.label_len, :], dec_inp], dim=1).float().to(self.device)
+                dec_inp = torch.cat([batch_y[:, :self.args.label_len, :], dec_inp], dim=1).float().to(self.device)  # [32, 144, 7]
                 
                 # encoder - decoder
                 if self.args.use_amp:
@@ -147,7 +148,7 @@ class Exp_Main(Exp_Basic):
                     if 'Linear' in self.args.model:
                             outputs = self.model(batch_x)
                     else:
-                        if self.args.output_attention: #whether to output attention in ecoder
+                        if self.args.output_attention:  # whether to output attention in ecoder
                             outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]                         
                         else:
                             outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)  # [32, 96, 7]
