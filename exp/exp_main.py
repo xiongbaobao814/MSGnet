@@ -108,9 +108,10 @@ class Exp_Main(Exp_Basic):
         # use automatic mixed precision training
         if self.args.use_amp:
             scaler = torch.cuda.amp.GradScaler()
+        
         for epoch in range(self.args.train_epochs):
             iter_count = 0
-            train_loss = []
+            train_loss = []            
             
             self.model.train()
             epoch_time = time.time()
@@ -189,7 +190,6 @@ class Exp_Main(Exp_Basic):
                 break
 
             adjust_learning_rate(model_optim, epoch + 1, self.args)
-
         best_model_path = path + '/' + 'checkpoint.pth'
         self.model.load_state_dict(torch.load(best_model_path))
 

@@ -64,9 +64,9 @@ class ScaleGraphBlock(nn.Module):
         #     out = self.att(out.permute(0, 3, 1, 2).contiguous()) #return
         #     out = out.permute(0, 2, 3, 1).reshape(B, -1 ,N)
 
-            out = out[:, :self.seq_len, :]          # [32, 96, 512]
+            out = out[:, :self.seq_len, :]      # [32, 96, 512]
             res.append(out)
-        res = torch.stack(res, dim=-1)              # [32, 96, 512, 5]
+        res = torch.stack(res, dim=-1)          # [32, 96, 512, 5]
         
         # adaptive aggregation
         scale_weight = F.softmax(scale_weight, dim=1)                               # [32, 5]
@@ -94,10 +94,10 @@ class Model(nn.Module):
         # self.node_dim = configs.node_dim
         # to return adj (node , node)
         # self.graph = constructor_graph()
-
-        self.model = nn.ModuleList([ScaleGraphBlock(configs) for _ in range(configs.e_layers)])
+        
         self.enc_embedding = DataEmbedding(configs.enc_in, configs.d_model, configs.embed, configs.freq, configs.dropout)
         self.layer = configs.e_layers
+        self.model = nn.ModuleList([ScaleGraphBlock(configs) for _ in range(configs.e_layers)])
         self.layer_norm = nn.LayerNorm(configs.d_model)
         self.predict_linear = nn.Linear(self.seq_len, self.pred_len + self.seq_len)
         self.projection = nn.Linear(configs.d_model, configs.c_out, bias=True)
@@ -106,6 +106,7 @@ class Model(nn.Module):
 
     def forward(self, x_enc, x_mark_enc, x_dec, x_mark_dec, mask=None):
         # x_enc:[32, 96, 7],x_mark_enc:[32, 96, 4],x_dec:[32, 144, 7],x_mark_dec:[32, 144, 4]
+        
         # Normalization from Non-stationary Transformer
         means = x_enc.mean(1, keepdim=True).detach()
         x_enc = x_enc - means

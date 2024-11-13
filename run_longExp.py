@@ -18,7 +18,7 @@ parser.add_argument('--task_name', type=str, required=False, default='long_term_
                     help='task name, options:[long_term_forecast, mask, short_term_forecast, imputation, classification, anomaly_detection]')
 parser.add_argument('--is_training', type=int, required=False, default=1, help='status')
 parser.add_argument('--model_id', type=str, required=False, default='test', help='model id')
-parser.add_argument('--model', type=str, required=False, default='FCMSGNN',
+parser.add_argument('--model', type=str, required=False, default='MSGNet',
                     help='model name, options: [Autoformer, Informer, Transformer, MSGNet, FCMSGNN]')
 
 # data loader
